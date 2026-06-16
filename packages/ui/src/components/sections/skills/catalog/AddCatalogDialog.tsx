@@ -246,7 +246,11 @@ export const AddCatalogDialog: React.FC<AddCatalogDialogProps> = ({ open, onOpen
 
     try {
       await updateDesktopSettings({ skillCatalogs: updated });
-      await flushPendingSettingsUpdate();
+      const saved = await flushPendingSettingsUpdate();
+      if (!saved) {
+        toast.error(t('settings.skills.catalog.add.toast.saveFailed'));
+        return;
+      }
       setExistingCatalogs(updated);
       addSource({
         id: next.id,

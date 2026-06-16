@@ -683,6 +683,8 @@ export const settingsDict = {
   "settings.skills.catalog.add.toast.catalogAlreadyExists": "Este catálogo já existe",
   "settings.skills.catalog.add.toast.catalogAdded": "Catálogo adicionado",
   "settings.skills.catalog.add.toast.saveFailed": "Não foi possível salvar o catálogo",
+  "settings.skills.catalog.remove.toast.loadFailed": "Failed to load settings",
+  "settings.skills.catalog.remove.toast.saveFailed": "Failed to save catalog",
   "settings.skills.catalog.installFromRepo.title": "Instalar de repositório Git",
   "settings.skills.catalog.installFromRepo.descriptionPrefix": "Escaneie um repositório para encontrar pastas que contenham",
   "settings.skills.catalog.installFromRepo.descriptionSuffix": ", depois instale habilidades selecionadas.",

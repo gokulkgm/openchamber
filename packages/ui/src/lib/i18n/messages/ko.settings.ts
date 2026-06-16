@@ -683,6 +683,8 @@ export const settingsDict = {
   'settings.skills.catalog.add.toast.catalogAlreadyExists': '이 카탈로그는 이미 존재합니다',
   'settings.skills.catalog.add.toast.catalogAdded': '카탈로그를 추가했습니다',
   'settings.skills.catalog.add.toast.saveFailed': '카탈로그를 저장하지 못했습니다',
+  'settings.skills.catalog.remove.toast.loadFailed': 'Failed to load settings',
+  'settings.skills.catalog.remove.toast.saveFailed': 'Failed to save catalog',
   'settings.skills.catalog.installFromRepo.title': 'Git 저장소에서 설치',
   'settings.skills.catalog.installFromRepo.descriptionPrefix': '다음을 포함하는 폴더를 저장소에서 스캔한 뒤',
   'settings.skills.catalog.installFromRepo.descriptionSuffix': ', 선택한 스킬을 설치합니다.',

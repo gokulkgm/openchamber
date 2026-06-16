@@ -1533,6 +1533,8 @@ export const settingsDict = {
   'settings.skills.catalog.page.removeDialog.title': 'Usuń katalog',
   'settings.skills.catalog.page.section.sourceRepository': 'Repozytorium źródłowe',
   'settings.skills.catalog.page.title': 'Katalog umiejętności',
+  'settings.skills.catalog.remove.toast.loadFailed': 'Failed to load settings',
+  'settings.skills.catalog.remove.toast.saveFailed': 'Failed to save catalog',
   'settings.skills.catalog.shared.actions.install': 'Zainstaluj',
   'settings.skills.catalog.shared.actions.installing': 'Instalowanie...',
   'settings.skills.catalog.shared.actions.scan': 'Skanuj',

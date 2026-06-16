@@ -1256,11 +1256,11 @@ let _pendingSettingsChanges: Partial<DesktopSettings> | null = null;
 let _settingsFlushTimer: ReturnType<typeof setTimeout> | null = null;
 const SETTINGS_DEBOUNCE_MS = 200;
 
-const _flushSettingsUpdate = async (): Promise<void> => {
+const _flushSettingsUpdate = async (): Promise<boolean> => {
   const changes = _pendingSettingsChanges;
   _pendingSettingsChanges = null;
   _settingsFlushTimer = null;
-  if (!changes || Object.keys(changes).length === 0) return;
+  if (!changes || Object.keys(changes).length === 0) return true;
 
   const runtimeSettings = getRuntimeSettingsAPI();
   if (runtimeSettings) {
@@ -1271,9 +1271,10 @@ const _flushSettingsUpdate = async (): Promise<void> => {
         applyDesktopUiPreferences(updated);
         dispatchSettingsSynced(updated);
       }
-      return;
+      return true;
     } catch (error) {
       console.warn('Failed to update settings via runtime settings API:', error);
+      return false;
     }
   }
 
@@ -1289,7 +1290,7 @@ const _flushSettingsUpdate = async (): Promise<void> => {
 
     if (!response.ok) {
       console.warn('Failed to update shared settings via API:', response.status, response.statusText);
-      return;
+      return false;
     }
 
     const updated = (await response.json().catch(() => null)) as DesktopSettings | null;
@@ -1300,8 +1301,10 @@ const _flushSettingsUpdate = async (): Promise<void> => {
       // Invalidate GET cache so next read sees the fresh data
       _settingsCache = null;
     }
+    return true;
   } catch (error) {
     console.warn('Failed to update shared settings via API:', error);
+    return false;
   }
 };
 
@@ -1318,14 +1321,15 @@ export const updateDesktopSettings = async (changes: Partial<DesktopSettings>): 
   _settingsFlushTimer = setTimeout(() => void _flushSettingsUpdate(), SETTINGS_DEBOUNCE_MS);
 };
 
-export const flushPendingSettingsUpdate = async (): Promise<void> => {
+export const flushPendingSettingsUpdate = async (): Promise<boolean> => {
   if (_settingsFlushTimer) {
     clearTimeout(_settingsFlushTimer);
     _settingsFlushTimer = null;
   }
   if (_pendingSettingsChanges) {
-    await _flushSettingsUpdate();
+    return _flushSettingsUpdate();
   }
+  return true;
 };
 
 export const initializeAppearancePreferences = async (): Promise<void> => {

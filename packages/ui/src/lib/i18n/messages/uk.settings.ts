@@ -683,6 +683,8 @@ export const settingsDict = {
   "settings.skills.catalog.add.toast.catalogAlreadyExists": "Цей каталог вже існує",
   "settings.skills.catalog.add.toast.catalogAdded": "Каталог додано",
   "settings.skills.catalog.add.toast.saveFailed": "Не вдалося зберегти каталог",
+  "settings.skills.catalog.remove.toast.loadFailed": "Failed to load settings",
+  "settings.skills.catalog.remove.toast.saveFailed": "Failed to save catalog",
   "settings.skills.catalog.installFromRepo.title": "Встановити зі сховища Git",
   "settings.skills.catalog.installFromRepo.descriptionPrefix": "Проскануйте сховище на наявність папок, що містять",
   "settings.skills.catalog.installFromRepo.descriptionSuffix": ", потім встановіть вибрані навички.",

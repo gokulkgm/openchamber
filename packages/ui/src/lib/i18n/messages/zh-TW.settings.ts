@@ -680,6 +680,8 @@
   'settings.skills.catalog.add.toast.catalogAlreadyExists': '該目錄已存在',
   'settings.skills.catalog.add.toast.catalogAdded': '目錄已新增',
   'settings.skills.catalog.add.toast.saveFailed': '儲存目錄失敗',
+  'settings.skills.catalog.remove.toast.loadFailed': 'Failed to load settings',
+  'settings.skills.catalog.remove.toast.saveFailed': 'Failed to save catalog',
   'settings.skills.catalog.installFromRepo.title': '從 Git 儲存庫安裝',
   'settings.skills.catalog.installFromRepo.descriptionPrefix': '掃描儲存庫中包含',
   'settings.skills.catalog.installFromRepo.descriptionSuffix': '的資料夾，然後安裝選中的 skills。',

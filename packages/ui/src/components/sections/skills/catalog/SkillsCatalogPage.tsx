@@ -1,5 +1,6 @@
 import React from 'react';
 import { runtimeFetch } from '@/lib/runtime-fetch';
+import { toast } from '@/components/ui';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -152,10 +153,18 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
     setIsRemovingCatalog(true);
     try {
       const settings = await loadSettings();
-      const catalogs = (Array.isArray(settings?.skillCatalogs) ? settings?.skillCatalogs : []) as SkillCatalogConfig[];
+      if (!settings) {
+        toast.error(t('settings.skills.catalog.remove.toast.loadFailed'));
+        return;
+      }
+      const catalogs = (Array.isArray(settings.skillCatalogs) ? settings.skillCatalogs : []) as SkillCatalogConfig[];
       const updated = catalogs.filter((c) => c.id !== selectedSourceId);
       await updateDesktopSettings({ skillCatalogs: updated });
-      await flushPendingSettingsUpdate();
+      const saved = await flushPendingSettingsUpdate();
+      if (!saved) {
+        toast.error(t('settings.skills.catalog.remove.toast.saveFailed'));
+        return;
+      }
       removeSource(selectedSourceId);
       setIsRemoveCatalogDialogOpen(false);
       void loadCatalog({ refresh: true });
