@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils';
 import type { SkillsCatalogItem } from '@/lib/api/types';
 
 import { getRegisteredRuntimeAPIs } from '@/contexts/runtimeAPIRegistry';
-import { updateDesktopSettings } from '@/lib/persistence';
+import { updateDesktopSettings, flushPendingSettingsUpdate } from '@/lib/persistence';
 import type { DesktopSettings, SkillCatalogConfig } from '@/lib/desktop';
 import { useI18n } from '@/lib/i18n';
 
@@ -153,6 +153,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
       const catalogs = (Array.isArray(settings?.skillCatalogs) ? settings?.skillCatalogs : []) as SkillCatalogConfig[];
       const updated = catalogs.filter((c) => c.id !== selectedSourceId);
       await updateDesktopSettings({ skillCatalogs: updated });
+      await flushPendingSettingsUpdate();
       await loadCatalog({ refresh: true });
       setIsRemoveCatalogDialogOpen(false);
     } finally {

@@ -1318,6 +1318,16 @@ export const updateDesktopSettings = async (changes: Partial<DesktopSettings>): 
   _settingsFlushTimer = setTimeout(() => void _flushSettingsUpdate(), SETTINGS_DEBOUNCE_MS);
 };
 
+export const flushPendingSettingsUpdate = async (): Promise<void> => {
+  if (_settingsFlushTimer) {
+    clearTimeout(_settingsFlushTimer);
+    _settingsFlushTimer = null;
+  }
+  if (_pendingSettingsChanges) {
+    await _flushSettingsUpdate();
+  }
+};
+
 export const initializeAppearancePreferences = async (): Promise<void> => {
   if (typeof window === 'undefined') {
     return;

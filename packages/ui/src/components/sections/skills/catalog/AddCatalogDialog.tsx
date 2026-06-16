@@ -22,7 +22,7 @@ import { Icon } from "@/components/icon/Icon";
 
 import { getRegisteredRuntimeAPIs } from '@/contexts/runtimeAPIRegistry';
 import { isVSCodeRuntime } from '@/lib/desktop';
-import { updateDesktopSettings } from '@/lib/persistence';
+import { updateDesktopSettings, flushPendingSettingsUpdate } from '@/lib/persistence';
 import type { DesktopSettings, SkillCatalogConfig } from '@/lib/desktop';
 import { useSkillsCatalogStore } from '@/stores/useSkillsCatalogStore';
 import { useGitIdentitiesStore } from '@/stores/useGitIdentitiesStore';
@@ -245,6 +245,7 @@ export const AddCatalogDialog: React.FC<AddCatalogDialogProps> = ({ open, onOpen
 
     try {
       await updateDesktopSettings({ skillCatalogs: updated });
+      await flushPendingSettingsUpdate();
       setExistingCatalogs(updated);
       toast.success(t('settings.skills.catalog.add.toast.catalogAdded'));
       await loadCatalog({ refresh: true });
