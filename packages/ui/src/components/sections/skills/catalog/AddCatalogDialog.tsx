@@ -85,6 +85,7 @@ export const AddCatalogDialog: React.FC<AddCatalogDialogProps> = ({ open, onOpen
   const { t } = useI18n();
   const scanRepo = useSkillsCatalogStore((s) => s.scanRepo);
   const loadCatalog = useSkillsCatalogStore((s) => s.loadCatalog);
+  const addSource = useSkillsCatalogStore((s) => s.addSource);
   const isScanning = useSkillsCatalogStore((s) => s.isScanning);
   const defaultGitIdentityId = useGitIdentitiesStore((s) => s.defaultGitIdentityId);
   const loadDefaultGitIdentityId = useGitIdentitiesStore((s) => s.loadDefaultGitIdentityId);
@@ -247,9 +248,16 @@ export const AddCatalogDialog: React.FC<AddCatalogDialogProps> = ({ open, onOpen
       await updateDesktopSettings({ skillCatalogs: updated });
       await flushPendingSettingsUpdate();
       setExistingCatalogs(updated);
+      addSource({
+        id: next.id,
+        label: trimmedLabel,
+        description: trimmedSource,
+        source: trimmedSource,
+        ...(trimmedSubpath ? { defaultSubpath: trimmedSubpath } : {}),
+      });
       toast.success(t('settings.skills.catalog.add.toast.catalogAdded'));
-      await loadCatalog({ refresh: true });
       onOpenChange(false);
+      void loadCatalog({ refresh: true });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('settings.skills.catalog.add.toast.saveFailed'));
     }

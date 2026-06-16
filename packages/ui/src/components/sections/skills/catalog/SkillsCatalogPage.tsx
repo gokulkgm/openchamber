@@ -76,6 +76,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
     loadCatalog,
     loadSource,
     loadMoreClawdHub,
+    removeSource,
     isLoadingCatalog,
     isLoadingSource,
     isLoadingMore,
@@ -90,6 +91,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
     loadCatalog: s.loadCatalog,
     loadSource: s.loadSource,
     loadMoreClawdHub: s.loadMoreClawdHub,
+    removeSource: s.removeSource,
     isLoadingCatalog: s.isLoadingCatalog,
     isLoadingSource: s.isLoadingSource,
     isLoadingMore: s.isLoadingMore,
@@ -154,8 +156,9 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
       const updated = catalogs.filter((c) => c.id !== selectedSourceId);
       await updateDesktopSettings({ skillCatalogs: updated });
       await flushPendingSettingsUpdate();
-      await loadCatalog({ refresh: true });
+      removeSource(selectedSourceId);
       setIsRemoveCatalogDialogOpen(false);
+      void loadCatalog({ refresh: true });
     } finally {
       setIsRemovingCatalog(false);
     }
