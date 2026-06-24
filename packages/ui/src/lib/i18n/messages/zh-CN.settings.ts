@@ -684,6 +684,8 @@ export const settingsDict = {
   'settings.skills.catalog.add.toast.catalogAlreadyExists': '该目录已存在',
   'settings.skills.catalog.add.toast.catalogAdded': '目录已添加',
   'settings.skills.catalog.add.toast.saveFailed': '保存目录失败',
+  'settings.skills.catalog.remove.toast.loadFailed': 'Failed to load settings',
+  'settings.skills.catalog.remove.toast.saveFailed': 'Failed to save catalog',
   'settings.skills.catalog.installFromRepo.title': '从 Git 仓库安装',
   'settings.skills.catalog.installFromRepo.descriptionPrefix': '扫描仓库中包含',
   'settings.skills.catalog.installFromRepo.descriptionSuffix': '的文件夹，然后安装选中的技能。',

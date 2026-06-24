@@ -85,6 +85,8 @@ export interface SkillsCatalogState {
   scanResults: SkillsCatalogItem[] | null;
 
   setSelectedSource: (id: string | null) => void;
+  addSource: (source: SkillsCatalogSource) => void;
+  removeSource: (sourceId: string) => void;
 
   loadCatalog: (options?: { refresh?: boolean }) => Promise<boolean>;
   loadSource: (sourceId: string, options?: { refresh?: boolean }) => Promise<boolean>;
@@ -116,6 +118,22 @@ export const useSkillsCatalogStore = create<SkillsCatalogState>()(
       scanResults: null,
 
       setSelectedSource: (id) => set({ selectedSourceId: id }),
+
+      addSource: (source) => {
+        const current = get().sources;
+        if (current.some((s) => s.id === source.id)) return;
+        set({ sources: [...current, source] });
+      },
+
+      removeSource: (sourceId) => {
+        const current = get().sources;
+        const updated = current.filter((s) => s.id !== sourceId);
+        if (updated.length === current.length) return;
+        const selectedSourceId = get().selectedSourceId === sourceId
+          ? (updated[0]?.id ?? null)
+          : get().selectedSourceId;
+        set({ sources: updated, selectedSourceId });
+      },
 
       loadCatalog: async (options) => {
         const currentDirectory = getCurrentDirectory();

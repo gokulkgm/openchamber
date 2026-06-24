@@ -717,6 +717,8 @@ export const settingsDict = {
   'settings.skills.catalog.add.toast.catalogAlreadyExists': 'This catalog already exists',
   'settings.skills.catalog.add.toast.catalogAdded': 'Catalog added',
   'settings.skills.catalog.add.toast.saveFailed': 'Failed to save catalog',
+  'settings.skills.catalog.remove.toast.loadFailed': 'Failed to load settings',
+  'settings.skills.catalog.remove.toast.saveFailed': 'Failed to save catalog',
   'settings.skills.catalog.installFromRepo.title': 'Install from Git repository',
   'settings.skills.catalog.installFromRepo.descriptionPrefix': 'Scan a repository for folders containing',
   'settings.skills.catalog.installFromRepo.descriptionSuffix': ', then install selected skills.',

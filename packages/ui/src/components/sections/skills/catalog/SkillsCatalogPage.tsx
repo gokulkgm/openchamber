@@ -1,5 +1,6 @@
 import React from 'react';
 import { runtimeFetch } from '@/lib/runtime-fetch';
+import { toast } from '@/components/ui';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +29,7 @@ import { cn } from '@/lib/utils';
 import type { SkillsCatalogItem } from '@/lib/api/types';
 
 import { getRegisteredRuntimeAPIs } from '@/contexts/runtimeAPIRegistry';
-import { updateDesktopSettings } from '@/lib/persistence';
+import { updateDesktopSettings, flushPendingSettingsUpdate } from '@/lib/persistence';
 import type { DesktopSettings, SkillCatalogConfig } from '@/lib/desktop';
 import { useI18n } from '@/lib/i18n';
 
@@ -76,6 +77,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
     loadCatalog,
     loadSource,
     loadMoreClawdHub,
+    removeSource,
     isLoadingCatalog,
     isLoadingSource,
     isLoadingMore,
@@ -90,6 +92,7 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
     loadCatalog: s.loadCatalog,
     loadSource: s.loadSource,
     loadMoreClawdHub: s.loadMoreClawdHub,
+    removeSource: s.removeSource,
     isLoadingCatalog: s.isLoadingCatalog,
     isLoadingSource: s.isLoadingSource,
     isLoadingMore: s.isLoadingMore,
@@ -150,11 +153,21 @@ export const SkillsCatalogPage: React.FC<SkillsCatalogPageProps> = ({ mode, onMo
     setIsRemovingCatalog(true);
     try {
       const settings = await loadSettings();
-      const catalogs = (Array.isArray(settings?.skillCatalogs) ? settings?.skillCatalogs : []) as SkillCatalogConfig[];
+      if (!settings) {
+        toast.error(t('settings.skills.catalog.remove.toast.loadFailed'));
+        return;
+      }
+      const catalogs = (Array.isArray(settings.skillCatalogs) ? settings.skillCatalogs : []) as SkillCatalogConfig[];
       const updated = catalogs.filter((c) => c.id !== selectedSourceId);
       await updateDesktopSettings({ skillCatalogs: updated });
-      await loadCatalog({ refresh: true });
+      const saved = await flushPendingSettingsUpdate();
+      if (!saved) {
+        toast.error(t('settings.skills.catalog.remove.toast.saveFailed'));
+        return;
+      }
+      removeSource(selectedSourceId);
       setIsRemoveCatalogDialogOpen(false);
+      void loadCatalog({ refresh: true });
     } finally {
       setIsRemovingCatalog(false);
     }
