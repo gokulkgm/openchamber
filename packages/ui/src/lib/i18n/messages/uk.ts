@@ -119,6 +119,7 @@ export const dict: Record<I18nKey, string> = {
   "layout.mainTab.terminal": "Термінал",
   "layout.mainTab.context": "Контекст",
   "mobile.nav.aria": "Мобільна навігація",
+  "mobile.shell.toast.exitConfirm": "Натисніть «Назад» ще раз, щоб вийти",
   "mobile.connect.welcome.title": "Підключись до OpenChamber",
   "mobile.connect.welcome.description": "Додай адресу сервера або відскануй QR-код pairing, щоб почати користуватись мобільною апкою.",
   "mobile.connect.url.label": "Адреса сервера",

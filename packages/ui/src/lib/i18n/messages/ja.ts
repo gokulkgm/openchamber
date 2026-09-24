@@ -119,6 +119,7 @@ export const dict: Record<I18nKey, string> = {
   'layout.mainTab.terminal': 'ターミナル',
   'layout.mainTab.context': 'コンテキスト',
   'mobile.nav.aria': 'モバイルナビゲーション',
+  'mobile.shell.toast.exitConfirm': '終了するにはもう一度戻るを押してください',
   'mobile.nav.changes': '変更',
   'mobile.nav.settings': '設定',
   'mobile.menu.instances': 'インスタンス',

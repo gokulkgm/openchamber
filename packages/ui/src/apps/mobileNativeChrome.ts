@@ -434,7 +434,7 @@ export const useNativeMobileLifecycle = (onResume: () => void): void => {
   }, [onResume]);
 };
 
-export const useNativeAndroidBackButton = (onBack: () => boolean): void => {
+export const useNativeAndroidBackButton = (onBack: () => boolean, onUnhandledBack: () => void): void => {
   React.useEffect(() => {
     if (!isCapacitorMobileApp()) return;
 
@@ -445,7 +445,7 @@ export const useNativeAndroidBackButton = (onBack: () => boolean): void => {
       if (disposed) return;
       const listener = await App.addListener('backButton', () => {
         if (onBack()) return;
-        void App.minimizeApp().catch(() => undefined);
+        onUnhandledBack();
       });
       if (disposed) {
         void listener.remove();
@@ -458,5 +458,5 @@ export const useNativeAndroidBackButton = (onBack: () => boolean): void => {
       disposed = true;
       remove?.();
     };
-  }, [onBack]);
+  }, [onBack, onUnhandledBack]);
 };

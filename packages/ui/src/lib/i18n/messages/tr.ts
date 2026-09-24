@@ -105,6 +105,7 @@ export const dict = {
   'layout.mainTab.terminal': 'Terminal',
   'layout.mainTab.context': 'Bağlam',
   'mobile.nav.aria': 'Mobil gezinme',
+  'mobile.shell.toast.exitConfirm': 'Çıkmak için geri tuşuna tekrar basın',
   'mobile.connect.welcome.title': 'OpenChamber\'a bağlan',
   'mobile.connect.welcome.description': 'Mobil uygulamayı kullanmaya başlamak için bir sunucu URL\'si ekleyin veya eşleştirme QR kodunu tarayın.',
   'mobile.connect.url.label': 'Sunucu URL\'si',

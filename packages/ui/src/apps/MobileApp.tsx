@@ -19,6 +19,7 @@ import { useAuthSessionStore } from '@/lib/runtime-auth-expiry';
 import { registerRuntimeAPIs } from '@/contexts/runtimeAPIRegistry';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/sonner';
+import { toast } from '@/components/ui';
 import { usePushVisibilityBeacon } from '@/hooks/usePushVisibilityBeacon';
 import { useRouter } from '@/hooks/useRouter';
 import { useTerminalSessionKeepalive } from '@/hooks/useTerminalSessionKeepalive';
@@ -112,6 +113,7 @@ type MobileAppProps = {
 };
 
 const NATIVE_RESUME_SYNC_EVENT_THROTTLE_MS = 1_000;
+const ANDROID_EXIT_CONFIRM_MS = 2_000;
 
 /** The fullscreen app-level surfaces, reachable from the sessions drawer
     footer. Exactly one can be open at a time — opening another replaces it,
@@ -327,6 +329,40 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
     settingsBackRef.current = handler;
   }, []);
 
+  // Once nothing above the chat is left to close, the next back would leave the
+  // app — so the first such back only arms an exit confirm (toast + a short
+  // window) and a second back inside it really exits. Any back that closes a
+  // layer disarms the window again.
+  const exitConfirmUntilRef = React.useRef(0);
+  const exitConfirmTimerRef = React.useRef<number | null>(null);
+  const disarmExitConfirm = React.useCallback(() => {
+    exitConfirmUntilRef.current = 0;
+    if (exitConfirmTimerRef.current !== null) {
+      window.clearTimeout(exitConfirmTimerRef.current);
+      exitConfirmTimerRef.current = null;
+    }
+  }, []);
+  React.useEffect(() => disarmExitConfirm, [disarmExitConfirm]);
+
+  const requestAppExit = React.useCallback(() => {
+    if (Date.now() < exitConfirmUntilRef.current) {
+      disarmExitConfirm();
+      void import('@capacitor/app')
+        .then(({ App }) => App.exitApp())
+        .catch(() => undefined);
+      return;
+    }
+    exitConfirmUntilRef.current = Date.now() + ANDROID_EXIT_CONFIRM_MS;
+    toast.message(t('mobile.shell.toast.exitConfirm'), {
+      id: 'android-back-exit',
+      duration: ANDROID_EXIT_CONFIRM_MS,
+    });
+    exitConfirmTimerRef.current = window.setTimeout(() => {
+      exitConfirmTimerRef.current = null;
+      exitConfirmUntilRef.current = 0;
+    }, ANDROID_EXIT_CONFIRM_MS);
+  }, [disarmExitConfirm, t]);
+
   // Top-most layer first: a plan or fullscreen surface can sit ABOVE a drawer
   // (opened from the drawer footer / workspace tabs), so they close before the
   // drawers underneath.
@@ -353,7 +389,13 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
     return false;
   }, [activeSurface, closeSurface, closeWorkspace, openPlan, sessionsSheetOpen, workspaceOpen]);
 
-  useNativeAndroidBackButton(handleNativeBack);
+  const handleNativeBackOrExit = React.useCallback(() => {
+    if (!handleNativeBack()) return false;
+    disarmExitConfirm();
+    return true;
+  }, [disarmExitConfirm, handleNativeBack]);
+
+  useNativeAndroidBackButton(handleNativeBackOrExit, requestAppExit);
 
   // Server updates are actionable from a browser (hosted mobile) but not from
   // the Capacitor shell — the native app updates through the store, and the
