@@ -121,7 +121,10 @@ const ANDROID_EXIT_CONFIRM_MS = 2_000;
     (Changes / Files / Terminal / Notes / MCP) are separate layers. */
 type MobileSurface = 'instances' | 'settings' | 'update' | 'usage';
 
-const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onActiveConnectionDeleted }) => {
+const MobileShell: React.FC<{
+  onActiveConnectionDeleted: () => void;
+  nativeBackHandlerRef: React.RefObject<(() => boolean) | null>;
+}> = ({ onActiveConnectionDeleted, nativeBackHandlerRef }) => {
   const { t } = useI18n();
   // The mobile root does not mount MainLayout, so it owns its own terminal
   // keepalive: without it, background PTYs (running project actions included)
@@ -329,40 +332,6 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
     settingsBackRef.current = handler;
   }, []);
 
-  // Once nothing above the chat is left to close, the next back would leave the
-  // app — so the first such back only arms an exit confirm (toast + a short
-  // window) and a second back inside it really exits. Any back that closes a
-  // layer disarms the window again.
-  const exitConfirmUntilRef = React.useRef(0);
-  const exitConfirmTimerRef = React.useRef<number | null>(null);
-  const disarmExitConfirm = React.useCallback(() => {
-    exitConfirmUntilRef.current = 0;
-    if (exitConfirmTimerRef.current !== null) {
-      window.clearTimeout(exitConfirmTimerRef.current);
-      exitConfirmTimerRef.current = null;
-    }
-  }, []);
-  React.useEffect(() => disarmExitConfirm, [disarmExitConfirm]);
-
-  const requestAppExit = React.useCallback(() => {
-    if (Date.now() < exitConfirmUntilRef.current) {
-      disarmExitConfirm();
-      void import('@capacitor/app')
-        .then(({ App }) => App.exitApp())
-        .catch(() => undefined);
-      return;
-    }
-    exitConfirmUntilRef.current = Date.now() + ANDROID_EXIT_CONFIRM_MS;
-    toast.message(t('mobile.shell.toast.exitConfirm'), {
-      id: 'android-back-exit',
-      duration: ANDROID_EXIT_CONFIRM_MS,
-    });
-    exitConfirmTimerRef.current = window.setTimeout(() => {
-      exitConfirmTimerRef.current = null;
-      exitConfirmUntilRef.current = 0;
-    }, ANDROID_EXIT_CONFIRM_MS);
-  }, [disarmExitConfirm, t]);
-
   // Top-most layer first: a plan or fullscreen surface can sit ABOVE a drawer
   // (opened from the drawer footer / workspace tabs), so they close before the
   // drawers underneath.
@@ -389,13 +358,12 @@ const MobileShell: React.FC<{ onActiveConnectionDeleted: () => void }> = ({ onAc
     return false;
   }, [activeSurface, closeSurface, closeWorkspace, openPlan, sessionsSheetOpen, workspaceOpen]);
 
-  const handleNativeBackOrExit = React.useCallback(() => {
-    if (!handleNativeBack()) return false;
-    disarmExitConfirm();
-    return true;
-  }, [disarmExitConfirm, handleNativeBack]);
-
-  useNativeAndroidBackButton(handleNativeBackOrExit, requestAppExit);
+  React.useEffect(() => {
+    nativeBackHandlerRef.current = handleNativeBack;
+    return () => {
+      nativeBackHandlerRef.current = null;
+    };
+  }, [handleNativeBack, nativeBackHandlerRef]);
 
   // Server updates are actionable from a browser (hosted mobile) but not from
   // the Capacitor shell — the native app updates through the store, and the
@@ -1269,6 +1237,52 @@ function MobileAppContent({ apis }: MobileAppProps) {
   // UI doesn't reload on every network blip.
   const isReconnecting = !isConnected && connectionPhase === 'reconnecting';
 
+  // Android back-to-exit lives above the connect/splash branches so the gesture
+  // works on every native screen: the mounted screen registers the layers it can
+  // close into nativeBackHandlerRef; a press it doesn't consume only arms an exit
+  // confirm (toast + a short window), and a second press inside it really exits.
+  // Any press that closes a layer disarms the window again.
+  const exitConfirmUntilRef = React.useRef(0);
+  const exitConfirmTimerRef = React.useRef<number | null>(null);
+  const disarmExitConfirm = React.useCallback(() => {
+    exitConfirmUntilRef.current = 0;
+    if (exitConfirmTimerRef.current !== null) {
+      window.clearTimeout(exitConfirmTimerRef.current);
+      exitConfirmTimerRef.current = null;
+    }
+  }, []);
+  React.useEffect(() => disarmExitConfirm, [disarmExitConfirm]);
+
+  const requestAppExit = React.useCallback(() => {
+    if (Date.now() < exitConfirmUntilRef.current) {
+      disarmExitConfirm();
+      void import('@capacitor/app')
+        .then(({ App }) => App.exitApp())
+        .catch(() => undefined);
+      return;
+    }
+    exitConfirmUntilRef.current = Date.now() + ANDROID_EXIT_CONFIRM_MS;
+    toast.message(t('mobile.shell.toast.exitConfirm'), {
+      id: 'android-back-exit',
+      duration: ANDROID_EXIT_CONFIRM_MS,
+    });
+    exitConfirmTimerRef.current = window.setTimeout(() => {
+      exitConfirmTimerRef.current = null;
+      exitConfirmUntilRef.current = 0;
+    }, ANDROID_EXIT_CONFIRM_MS);
+  }, [disarmExitConfirm, t]);
+
+  const nativeBackHandlerRef = React.useRef<(() => boolean) | null>(null);
+  const dispatchNativeBack = React.useCallback(() => {
+    if (nativeBackHandlerRef.current?.()) {
+      disarmExitConfirm();
+      return true;
+    }
+    return false;
+  }, [disarmExitConfirm]);
+
+  useNativeAndroidBackButton(dispatchNativeBack, requestAppExit);
+
   // Hold a logo splash until the UI web font is loaded, so the first UI the user sees
   // already uses the real font instead of flashing the fallback and reflowing (FOUT).
   if (!fontsReady) {
@@ -1343,6 +1357,7 @@ function MobileAppContent({ apis }: MobileAppProps) {
         <MobileConnectionWelcome
           onConnected={() => setConnectionEpoch((value) => value + 1)}
           notice={autoConnectNotice}
+          nativeBackHandlerRef={nativeBackHandlerRef}
         />
       </>
     );
@@ -1386,10 +1401,9 @@ function MobileAppContent({ apis }: MobileAppProps) {
               <MobileShell onActiveConnectionDeleted={() => {
                 switchRuntimeEndpoint({ apiBaseUrl: '', clientToken: null, runtimeKey: MOBILE_DISCONNECTED_RUNTIME_KEY });
                 setConnectionEpoch((value) => value + 1);
-              }} />
+              }} nativeBackHandlerRef={nativeBackHandlerRef} />
               <AppLinkConfirmDialog />
               <SharedTrustConfirmDialog />
-              <Toaster position="top-center" offset="calc(var(--oc-safe-area-top, 0px) + 16px)" />
               {isInitialized ? <ConfigUpdateOverlay /> : null}
             </div>
           </TooltipProvider>
@@ -1405,7 +1419,18 @@ export function MobileApp(props: MobileAppProps) {
     getRuntimeApiBaseUrl,
     getRuntimeApiBaseUrl,
   );
+  // The Toaster sits at the root so native toasts (e.g. the back-to-exit
+  // confirm) also render on the pre-connect screens.
+  const toaster = <Toaster position="top-center" offset="calc(var(--oc-safe-area-top, 0px) + 16px)" />;
   // Native connection selection must mount before there is a server to probe.
-  if (isCapacitorMobileApp() && !endpoint) return <MobileAppContent {...props} />;
-  return <OpenCodeCompatibilityGate><MobileAppContent {...props} /></OpenCodeCompatibilityGate>;
+  if (isCapacitorMobileApp() && !endpoint) {
+    return <>
+      <MobileAppContent {...props} />
+      {toaster}
+    </>;
+  }
+  return <>
+    <OpenCodeCompatibilityGate><MobileAppContent {...props} /></OpenCodeCompatibilityGate>
+    {toaster}
+  </>;
 }

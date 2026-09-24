@@ -22,7 +22,9 @@ export const MobileConnectionWelcome: React.FC<{
   onConnected: () => void;
   /** Why the user landed here (failed cold-launch auto-connect) — shown as a banner. */
   notice?: MobileConnectionNotice | null;
-}> = ({ onConnected, notice = null }) => {
+  /** Slot the app-level Android back dispatcher asks before arming its exit confirm. */
+  nativeBackHandlerRef: React.RefObject<(() => boolean) | null>;
+}> = ({ onConnected, notice = null, nativeBackHandlerRef }) => {
   const { t } = useI18n();
   const conn = useMobileConnection(onConnected);
   const { connections, isBusy, isPasswordBusy, error, pendingConnection } = conn;
@@ -118,6 +120,27 @@ export const MobileConnectionWelcome: React.FC<{
   }, [conn, isBusy, t]);
 
   React.useEffect(() => () => scanAbortRef.current?.abort(), []);
+
+  // Android back closes this screen's layers (debug log, QR scanner) before the
+  // app-level dispatcher considers it unhandled and arms the exit confirm.
+  const handleNativeBack = React.useCallback(() => {
+    if (debugOpen) {
+      setDebugOpen(false);
+      return true;
+    }
+    if (isScanning) {
+      scanAbortRef.current?.abort();
+      return true;
+    }
+    return false;
+  }, [debugOpen, isScanning]);
+
+  React.useEffect(() => {
+    nativeBackHandlerRef.current = handleNativeBack;
+    return () => {
+      nativeBackHandlerRef.current = null;
+    };
+  }, [handleNativeBack, nativeBackHandlerRef]);
 
   const handlePasswordSubmit = React.useCallback((event: React.FormEvent) => {
     event.preventDefault();
