@@ -119,6 +119,7 @@ export const dict: Record<I18nKey, string> = {
   'layout.mainTab.terminal': '终端',
   'layout.mainTab.context': '上下文',
   'mobile.nav.aria': '移动导航',
+  'mobile.shell.toast.exitConfirm': '再按一次返回即可退出',
   'mobile.connect.welcome.title': '连接到 OpenChamber',
   'mobile.connect.welcome.description': '添加服务器 URL 或扫描配对二维码即可开始使用移动应用。',
   'mobile.connect.url.label': '服务器 URL',
